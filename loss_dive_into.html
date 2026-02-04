@@ -4,20 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimind Study - Loss Visualization</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    
+    <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    
+    <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+
+    <style>
+        /* 简单的 Loading 遮罩，防止 React 加载前的闪烁 */
+        #root:empty::before {
+            content: 'Loading visualization...';
+            display: block;
+            padding: 20px;
+            color: #64748b;
+            font-family: sans-serif;
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // 注意：这里是浏览器模式的解构，不再使用 import
+        // --- Google Engineer Check: Environment Safety ---
+        if (!window.React || !window.Recharts) {
+            console.error("Critical Dependency Error: Libraries failed to load.");
+            document.getElementById('root').innerHTML = '<div class="text-red-500 p-4">错误：依赖库加载失败，请检查网络连接或控制台日志。</div>';
+            throw new Error("Dependency missing");
+        }
+
+        // --- 解构全局变量 ---
         const { useState } = React;
+        // 修正：从全局 Recharts 对象中获取组件
         const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = Recharts;
 
+        // --- 主组件 ---
         const App = () => {
             const [logits, setLogits] = useState([2.1, 1.2, 3.5, 0.8, 1.9]);
             const [labelIndex, setLabelIndex] = useState(2);
@@ -44,7 +69,7 @@
                 <div className="flex flex-col min-h-screen bg-slate-50 p-6 font-sans">
                     <div className="max-w-5xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
-                        {/* Step 1 */}
+                        {/* Left Panel */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
                                 <span className="bg-blue-500 text-white px-2 py-0.5 rounded text-sm">#</span> 
@@ -67,10 +92,10 @@
                                             value={val} 
                                             onChange={(e) => updateLogit(idx, e.target.value)}
                                             className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                                            onClick={(e) => e.stopPropagation()}
+                                            onClick={(e) => e.stopPropagation()} 
                                         />
                                         <span className="w-10 font-mono font-bold text-right">{val.toFixed(1)}</span>
-                                        {idx === labelIndex && <span className="text-emerald-600">🎯</span>}
+                                        {idx === labelIndex && <span>🎯</span>}
                                     </div>
                                 ))}
                             </div>
@@ -81,7 +106,7 @@
                             </div>
                         </div>
 
-                        {/* Step 2 */}
+                        {/* Right Panel */}
                         <div className="flex flex-col gap-6">
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                                 <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
@@ -128,7 +153,6 @@
                             <div className="bg-blue-50 border border-blue-100 p-5 rounded-2xl">
                                 <p className="text-xs text-blue-700 leading-relaxed">
                                     <b>原理：</b> CrossEntropy 的本质是让模型在所有选项中感到“压力”最小化的同时，最大化正确项的得分。
-                                    通过滑动滑块，你可以观察绿色柱子变高时 Loss 如何下降。
                                 </p>
                             </div>
                         </div>
