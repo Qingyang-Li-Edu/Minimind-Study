@@ -9,25 +9,20 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // 1. 从全局变量中解构出 React 和组件库（浏览器 CDN 模式特有写法）
+        // 注意：这里是浏览器模式的解构，不再使用 import
         const { useState } = React;
         const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = Recharts;
-        const { Hash, Target, ChevronRight } = lucide;
 
         const App = () => {
-            // 模拟 Logits 数组 (对应 logits[i])
             const [logits, setLogits] = useState([2.1, 1.2, 3.5, 0.8, 1.9]);
-            // 模拟标签 (对应 labels[i+1])
             const [labelIndex, setLabelIndex] = useState(2);
             const vocabulary = ["the", "a", "cat", "dog", "sat"];
 
-            // 计算数学逻辑
             const sumExp = logits.reduce((acc, val) => acc + Math.exp(val), 0);
             const logSumExp = Math.log(sumExp);
             const targetLogit = logits[labelIndex];
@@ -49,15 +44,14 @@
                 <div className="flex flex-col min-h-screen bg-slate-50 p-6 font-sans">
                     <div className="max-w-5xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
-                        {/* 左侧：Logits 数组与索引 */}
+                        {/* Step 1 */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <div className="flex items-center gap-2 mb-6">
-                                <div className="text-blue-500 font-bold">#</div>
-                                <h2 className="text-lg font-bold">Step 1: 索引提取 (Indexing)</h2>
-                            </div>
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                <span className="bg-blue-500 text-white px-2 py-0.5 rounded text-sm">#</span> 
+                                Step 1: 索引提取 (Indexing)
+                            </h2>
 
                             <div className="space-y-3">
-                                <div className="text-sm text-slate-500 mb-2">Logits 数组 (模型原始打分):</div>
                                 {logits.map((val, idx) => (
                                     <div 
                                         key={idx} 
@@ -72,52 +66,54 @@
                                             type="range" min="-2" max="5" step="0.1" 
                                             value={val} 
                                             onChange={(e) => updateLogit(idx, e.target.value)}
-                                            className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none"
+                                            className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                                            onClick={(e) => e.stopPropagation()}
                                         />
                                         <span className="w-10 font-mono font-bold text-right">{val.toFixed(1)}</span>
+                                        {idx === labelIndex && <span className="text-emerald-600">🎯</span>}
                                     </div>
                                 ))}
                             </div>
 
                             <div className="mt-8 p-4 bg-slate-900 rounded-xl font-mono text-sm">
-                                <div className="text-slate-500"># 正确答案索引 = {labelIndex}</div>
+                                <div className="text-slate-500"># 正确答案 labels[i+1] = {labelIndex}</div>
                                 <div className="text-emerald-400">target_logit = {targetLogit.toFixed(2)}</div>
                             </div>
                         </div>
 
-                        {/* 右侧：数学拆解 */}
+                        {/* Step 2 */}
                         <div className="flex flex-col gap-6">
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <div className="text-purple-500 font-bold">></div>
-                                    <h2 className="text-lg font-bold">Step 2: 公式映射</h2>
-                                </div>
+                                <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                    <span className="bg-purple-500 text-white px-2 py-0.5 rounded text-sm">></span>
+                                    Step 2: 公式映射
+                                </h2>
                                 
                                 <div className="space-y-6">
-                                    <div className="flex justify-between items-end">
-                                        <div className="text-center flex-1">
+                                    <div className="flex justify-between items-end text-center">
+                                        <div className="flex-1">
                                             <div className="text-xl font-mono font-bold text-blue-600">{logSumExp.toFixed(3)}</div>
-                                            <div className="text-[10px] text-slate-400 uppercase mt-1">log(∑ e^z)</div>
+                                            <div className="text-[10px] text-slate-400 uppercase mt-1">LogSumExp</div>
                                         </div>
-                                        <div className="text-2xl font-light text-slate-300 pb-2">−</div>
-                                        <div className="text-center flex-1">
+                                        <div className="text-2xl text-slate-300 pb-2">−</div>
+                                        <div className="flex-1">
                                             <div className="text-xl font-mono font-bold text-emerald-600">{targetLogit.toFixed(3)}</div>
-                                            <div className="text-[10px] text-slate-400 uppercase mt-1">logits[label]</div>
+                                            <div className="text-[10px] text-slate-400 uppercase mt-1">Target Logit</div>
                                         </div>
-                                        <div className="text-2xl font-light text-slate-300 pb-2">=</div>
-                                        <div className="text-center flex-1">
+                                        <div className="text-2xl text-slate-300 pb-2">=</div>
+                                        <div className="flex-1">
                                             <div className="text-2xl font-mono font-bold text-red-500">{loss.toFixed(3)}</div>
-                                            <div className="text-[10px] text-slate-400 uppercase mt-1 font-bold text-red-400">Loss</div>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase mt-1 text-red-400">Loss</div>
                                         </div>
                                     </div>
 
-                                    <div className="h-48 w-full mt-4">
+                                    <div className="h-48 w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={chartData}>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                                 <XAxis dataKey="name" axisLine={false} tickLine={false} />
                                                 <YAxis hide domain={[0, 6]} />
-                                                <Tooltip />
+                                                <Tooltip cursor={{fill: 'transparent'}} />
                                                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                                                     {chartData.map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={entry.isTarget ? '#10b981' : '#cbd5e1'} />
@@ -131,9 +127,8 @@
 
                             <div className="bg-blue-50 border border-blue-100 p-5 rounded-2xl">
                                 <p className="text-xs text-blue-700 leading-relaxed">
-                                    1. <b>拉低背景噪音：</b> 减小 log(∑ e^z_j)，让整体得分下降。<br/>
-                                    2. <b>拉高正确目标：</b> 增大绿色柱子高度。<br/>
-                                    两者之间的<b>缝隙</b>越小，Loss 就越小。
+                                    <b>原理：</b> CrossEntropy 的本质是让模型在所有选项中感到“压力”最小化的同时，最大化正确项的得分。
+                                    通过滑动滑块，你可以观察绿色柱子变高时 Loss 如何下降。
                                 </p>
                             </div>
                         </div>
@@ -142,7 +137,6 @@
             );
         };
 
-        // 渲染根组件
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
